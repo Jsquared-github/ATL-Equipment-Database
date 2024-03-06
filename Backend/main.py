@@ -21,7 +21,7 @@ class Token(BaseModel):
     token_type: str
 
 
-class TokenDate(BaseModel):
+class TokenData(BaseModel):
     username: str | None = None
 
 
@@ -43,10 +43,10 @@ def get_pwd(password):
     return pwd_context.hash(password)
 
 
-def get_user(db, username):
+def get_user(db, username: str):
     con = sqlite3.connect(db)
     cur = con.cursor()
-    user_data = cur.execute("SELECT * FROM user_auth_info WHERE (username = ?);", (username)).pop()
+    user_data = cur.execute("SELECT * FROM user_auth_info WHERE username = ?", (username,)).fetchone()
     user = {"id": user_data[0], "username": user_data[1],
             "hashed_password": user_data[2], "category": user_data[3]
             }
@@ -73,16 +73,46 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
+async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, getenv("SECRET_KEY"), algorithms=[getenv("ALGORITHM")])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        token_data = TokenData(username=username)
+    except JWTError:
+        raise credentials_exception
+    user = get_user(getenv("DB_URL"), username=token_data.username)
+    if user is None:
+        raise credentials_exception
+    return user
+
+
 @app.post("/token")
 async def login_for_access_token(form: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
-    pass
+    user = authenticate_user(getenv("DB_URL"), form.username, form.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    expirey = timedelta(minutes=int(getenv("DEFAULT_EXPIRE")))
+    access_token = create_access_token(data={"sub": user.username}, expires_delta=expirey)
+    return Token(access_token=access_token, token_type="Bearer")
 
 
 @app.get("/users/me/")
-async def read_users_me():
-    pass
-
-
-print(authenticate_user(getenv("DB_URL"), "test_user", "user_pass"))
-print(authenticate_user(getenv("DB_URL"), "test_coach", "coach_pass"))
-print(authenticate_user(getenv("DB_URL"), "test_admin", "admin_pass"))
+async def read_users_me(current_user: Annotated[UserInDB, Depends(get_current_user)]):
+    if current_user.category == "user":
+        return {"Access_Level": "user"}
+    elif current_user.category == "coach":
+        return {"Access_Level": "coach"}
+    elif current_user.category == "admin":
+        return {"Access_Level": "admin"}
+    return current_user

@@ -1,2 +1,2 @@
 .env
-Backend\database\database.db
+Backend/database/database.db
