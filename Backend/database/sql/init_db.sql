@@ -2,9 +2,8 @@ PRAGMA foreign_keys = ON;
 
 CREATE TABLE user_auth_info(
     userID INTEGER PRIMARY KEY,
-    pass TEXT,
-    email TEXT,
     username TEXT,
+    pass TEXT,
     category TEXT
 );
 
