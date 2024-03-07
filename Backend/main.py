@@ -21,10 +21,6 @@ class Token(BaseModel):
     token_type: str
 
 
-class TokenData(BaseModel):
-    username: str | None = None
-
-
 class User(BaseModel):
     id: int
     username: str
@@ -43,14 +39,18 @@ def get_pwd(password):
     return pwd_context.hash(password)
 
 
-def get_user(db, username: str):
+def get_user(db, username: str, include_pwd: bool = True):
     con = sqlite3.connect(db)
     cur = con.cursor()
     user_data = cur.execute("SELECT * FROM user_auth_info WHERE username = ?", (username,)).fetchone()
-    user = {"id": user_data[0], "username": user_data[1],
-            "hashed_password": user_data[2], "category": user_data[3]
-            }
-    return UserInDB(**user)
+    if include_pwd:
+        user = {"id": user_data[0], "username": user_data[1],
+                "hashed_password": user_data[2], "category": user_data[3]
+                }
+        return UserInDB(**user)
+    else:
+        user = {"id": user_data[0], "username": user_data[1], "category": user_data[3]}
+        return User(**user)
 
 
 def authenticate_user(db, username: str, password: str):
@@ -84,10 +84,9 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = get_user(getenv("DB_URL"), username=token_data.username)
+    user = get_user(getenv("DB_URL"), username=username, include_pwd=False)
     if user is None:
         raise credentials_exception
     return user
@@ -109,10 +108,4 @@ async def login_for_access_token(form: Annotated[OAuth2PasswordRequestForm, Depe
 
 @app.get("/users/me/")
 async def read_users_me(current_user: Annotated[UserInDB, Depends(get_current_user)]):
-    if current_user.category == "user":
-        return {"Access_Level": "user"}
-    elif current_user.category == "coach":
-        return {"Access_Level": "coach"}
-    elif current_user.category == "admin":
-        return {"Access_Level": "admin"}
     return current_user
