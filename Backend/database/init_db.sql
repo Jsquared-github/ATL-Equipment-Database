@@ -24,16 +24,16 @@ CREATE TABLE player_info(
     pID INTEGER,
     tID INTEGER,
     PRIMARY KEY(pID,tID),
-    FOREIGN KEY(pID) REFERENCES user_auth_info(userID),
-    FOREIGN KEY(tID) REFERENCES team_info(teamID)
+    FOREIGN KEY(pID) REFERENCES user_auth_info(userID) ON DELETE CASCADE,
+    FOREIGN KEY(tID) REFERENCES team_info(teamID) ON DELETE CASCADE
 )WITHOUT ROWID;
 
 CREATE TABLE coach_info(
     coachID INTEGER,
     tID INTEGER,
     PRIMARY KEY(coachID,tID),
-    FOREIGN KEY(coachID) REFERENCES user_auth_info(userID),
-    FOREIGN KEY(tID) REFERENCES team_info(teamID)
+    FOREIGN KEY(coachID) REFERENCES user_auth_info(userID) ON DELETE CASCADE,
+    FOREIGN KEY(tID) REFERENCES team_info(teamID) ON DELETE CASCADE
 )WITHOUT ROWID;
 
 CREATE TABLE activity_log(
@@ -43,7 +43,7 @@ CREATE TABLE activity_log(
     eID INTEGER,
     equipDiff INTEGER,
     PRIMARY KEY(cID,tID, coDate),
-    FOREIGN KEY(cID) REFERENCES coach_info(coachID),
-    FOREIGN KEY(tID) REFERENCES team_info(teamID),
-    FOREIGN KEY(eID) REFERENCES equipment_info(equpmentID)
+    FOREIGN KEY(cID) REFERENCES coach_info(coachID) ON DELETE CASCADE,
+    FOREIGN KEY(tID) REFERENCES team_info(teamID) ON DELETE CASCADE,
+    FOREIGN KEY(eID) REFERENCES equipment_info(equpmentID) ON DELETE CASCADE
 )WITHOUT ROWID;
