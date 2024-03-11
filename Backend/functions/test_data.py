@@ -2,7 +2,7 @@ import sqlite3
 import random
 
 
-from functions.password import get_password
+from .password import get_password
 
 
 users = [
@@ -65,12 +65,12 @@ for equipment in equipments:
                 )
     conn.commit()
 
-for idx in range(5):
+for idx in range(1, 6):
     rand_team = random.randint(1, max_team_id)
     cur.execute("INSERT INTO player_info (pID,tID) VALUES (?,?)", (idx, rand_team))
     conn.commit()
 
-for idx in range(5, 10):
+for idx in range(6, 11):
     rand_team = random.randint(1, max_team_id)
     cur.execute("INSERT INTO coach_info (coachID,tID) VALUES (?,?)", (idx, rand_team))
     conn.commit()
