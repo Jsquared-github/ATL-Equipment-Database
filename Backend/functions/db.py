@@ -133,43 +133,63 @@ def insert_team(db: str, team: str):
         con.close()
 
 
-def assign_player(db: str, player: str, team: str):
+def assign_user(db: str, user: str, team: str, type: str):
     try:
         con = sqlite3.connect(db)
         cur = con.cursor()
         u_id = cur.execute("SELECT userID FROM user_info WHERE username=?",
-                           (player,)).fetchone()[0]
+                           (user,)).fetchone()[0]
         t_id = cur.execute("SELECT teamID FROM team_info WHERE teamName=?",
                            (team,)).fetchone()[0]
-        assigned_check = cur.execute("SELECT COUNT(*) FROM player_info\
+        if type == "coach":
+            assigned_check = cur.execute("SELECT COUNT(*) FROM coach_info\
+                                        WHERE (coachID=?) AND (tID=?)", (u_id, t_id)).fetchone()[0]
+            if assigned_check > 0:
+                return f"{user} already assigned to {team} as {type}"
+            else:
+                cur.execute("INSERT INTO coach_info (coachID,tID) VALUES (?,?)", (u_id, t_id))
+                con.commit()
+                return f"Assigned {user} to {team} as {type}"
+        elif type == "player":
+            assigned_check = cur.execute("SELECT COUNT(*) FROM player_info\
                                       WHERE (pID=?) AND (tID=?)", (u_id, t_id)).fetchone()[0]
-        if assigned_check > 0:
-            return f"{player} already assigned to {team}"
-        else:
-            cur.execute("INSERT INTO player_info (pID,tID) VALUES (?,?)", (u_id, t_id))
-            con.commit()
-            return f"Assigned {player} to {team}"
+            if assigned_check > 0:
+                return f"{user} already assigned to {team} as {type}"
+            else:
+                cur.execute("INSERT INTO player_info (pID,tID) VALUES (?,?)", (u_id, t_id))
+                con.commit()
+                return f"Assigned {user} to {team} as {type}"
     finally:
         cur.close()
         con.close()
 
 
-def assign_coach(db: str, coach: str, team: str):
+def unassign_user(db: str, user: str, team: str, type: str):
     try:
         con = sqlite3.connect(db)
         cur = con.cursor()
-        c_id = cur.execute("SELECT userID FROM user_info WHERE username=?",
-                           (coach,)).fetchone()[0]
+        u_id = cur.execute("SELECT userID FROM user_info WHERE username=?",
+                           (user,)).fetchone()[0]
         t_id = cur.execute("SELECT teamID FROM team_info WHERE teamName=?",
                            (team,)).fetchone()[0]
-        assigned_check = cur.execute("SELECT COUNT(*) FROM coach_info\
-                                      WHERE (coachID=?) AND (tID=?)", (c_id, t_id)).fetchone()[0]
-        if assigned_check > 0:
-            return f"{coach} already assigned to {team}"
-        else:
-            cur.execute("INSERT INTO coach_info (coachID,tID) VALUES (?,?)", (c_id, t_id))
-            con.commit()
-            return f"Assigned {coach} to {team}"
+        if type == "coach":
+            assigned_check = cur.execute("SELECT COUNT(*) FROM coach_info\
+                                        WHERE (coachID=?) AND (tID=?)", (u_id, t_id)).fetchone()[0]
+            if assigned_check == 0:
+                return f"{user} not assigned to {team} as {type}"
+            else:
+                cur.execute("DELETE FROM coach_info WHERE coachID = ? AND tID = ?", (u_id, t_id))
+                con.commit()
+                return f"Removed {user} from {team} as {type}"
+        elif type == "player":
+            assigned_check = cur.execute("SELECT COUNT(*) FROM player_info\
+                                      WHERE (pID=?) AND (tID=?)", (u_id, t_id)).fetchone()[0]
+            if assigned_check == 0:
+                return f"{user} not assigned to {team} as {type}"
+            else:
+                cur.execute("DELETE FROM player_info WHERE pID = ? AND tID = ?", (u_id, t_id))
+                con.commit()
+                return f"Removed {user} from {team} as {type}"
     finally:
         cur.close()
         con.close()

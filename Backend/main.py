@@ -52,18 +52,6 @@ def get_curr_coaches(user: Annotated[User, Depends(auth.resolve_token)]):
     return coaches
 
 
-@app.post("/org/coaches/{coach}")
-def assign_coach(user: Annotated[User, Depends(auth.resolve_token)], coach: str, assign: str):
-    if user.category != "admin":
-        return HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to access this resource",
-            headers={"Content-Type": "application/json"}
-        )
-    resp = db.assign_coach(getenv("DB_URL"), coach, assign)
-    return resp
-
-
 @app.delete("/org/coaches/{coach}")
 def delete_coach(user: Annotated[User, Depends(auth.resolve_token)], coach: str):
     if user.category != "admin":
@@ -73,6 +61,30 @@ def delete_coach(user: Annotated[User, Depends(auth.resolve_token)], coach: str)
             headers={"Content-Type": "application/json"}
         )
     resp = db.delete_user(getenv("DB_URL"), coach)
+    return resp
+
+
+@app.post("/org/coaches/{coach}")
+def assign_coach(user: Annotated[User, Depends(auth.resolve_token)], coach: str, team: str):
+    if user.category != "admin":
+        return HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have permission to access this resource",
+            headers={"Content-Type": "application/json"}
+        )
+    resp = db.assign_user(getenv("DB_URL"), coach, team, "coach")
+    return resp
+
+
+@app.delete("/org/coaches/{coach}/{team}")
+def unassign_coach(user: Annotated[User, Depends(auth.resolve_token)], coach: str, team: str):
+    if user.category != "admin":
+        return HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have permission to access this resource",
+            headers={"Content-Type": "application/json"}
+        )
+    resp = db.unassign_user(getenv("DB_URL"), coach, team, "coach")
     return resp
 
 
@@ -88,18 +100,6 @@ def get_curr_players(user: Annotated[User, Depends(auth.resolve_token)]):
     return players
 
 
-@app.post("/org/players/{player}")
-def assign_player(user: Annotated[User, Depends(auth.resolve_token)], player: str, assign: str):
-    if user.category != "admin":
-        return HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to access this resource",
-            headers={"Content-Type": "application/json"}
-        )
-    resp = db.assign_player(getenv("DB_URL"), player, assign)
-    return resp
-
-
 @app.delete("/org/players/{player}")
 def delete_player(user: Annotated[User, Depends(auth.resolve_token)], player: str):
     if user.category != "admin":
@@ -109,6 +109,30 @@ def delete_player(user: Annotated[User, Depends(auth.resolve_token)], player: st
             headers={"Content-Type": "application/json"}
         )
     resp = db.delete_user(getenv("DB_URL"), player)
+    return resp
+
+
+@app.post("/org/players/{player}")
+def assign_player(user: Annotated[User, Depends(auth.resolve_token)], player: str, team: str):
+    if user.category != "admin":
+        return HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have permission to access this resource",
+            headers={"Content-Type": "application/json"}
+        )
+    resp = db.assign_user(getenv("DB_URL"), player, team, "player")
+    return resp
+
+
+@app.delete("/org/players/{player}/{team}")
+def unassign_player(user: Annotated[User, Depends(auth.resolve_token)], player: str, team: str):
+    if user.category != "admin":
+        return HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have permission to access this resource",
+            headers={"Content-Type": "application/json"}
+        )
+    resp = db.unassign_user(getenv("DB_URL"), player, team, "player")
     return resp
 
 
