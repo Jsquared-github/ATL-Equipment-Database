@@ -53,14 +53,14 @@ def get_curr_coaches(user: Annotated[User, Depends(auth.resolve_token)]):
 
 
 @app.post("/org/coaches/{coach}")
-def assign_coach(user: Annotated[User, Depends(auth.resolve_token)], coach: str, team: str):
+def assign_coach(user: Annotated[User, Depends(auth.resolve_token)], coach: str, assign: str):
     if user.category != "admin":
         return HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to access this resource",
             headers={"Content-Type": "application/json"}
         )
-    resp = db.assign_coach(getenv("DB_URL"), coach, team)
+    resp = db.assign_coach(getenv("DB_URL"), coach, assign)
     return resp
 
 
@@ -89,14 +89,14 @@ def get_curr_players(user: Annotated[User, Depends(auth.resolve_token)]):
 
 
 @app.post("/org/players/{player}")
-def assign_player(user: Annotated[User, Depends(auth.resolve_token)], player: str, team: str):
+def assign_player(user: Annotated[User, Depends(auth.resolve_token)], player: str, assign: str):
     if user.category != "admin":
         return HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to access this resource",
             headers={"Content-Type": "application/json"}
         )
-    resp = db.assign_player(getenv("DB_URL"), player, team)
+    resp = db.assign_player(getenv("DB_URL"), player, assign)
     return resp
 
 
