@@ -6,11 +6,11 @@ from .password import get_password
 
 
 users = [
-    ("user1", "user1_pass", "user"),
-    ("user2", "user2_pass", "user"),
-    ("user3", "user3_pass", "user"),
-    ("user4", "user4_pass", "user"),
-    ("user5", "user5_pass", "user"),
+    ("player1", "player1_pass", "player"),
+    ("player2", "player2_pass", "player"),
+    ("player3", "player3_pass", "player"),
+    ("player4", "player4_pass", "player"),
+    ("player5", "player5_pass", "player"),
     ("coach1", "coach1_pass", "coach"),
     ("coach2", "coach2_pass", "coach"),
     ("coach3", "coach3_pass", "coach"),
@@ -38,7 +38,7 @@ max_user_id, max_team_id, max_equip_id = (len(users), len(teams), len(equipments
 
 conn = sqlite3.connect("database/library.db")
 cur = conn.cursor()
-cur.execute("DELETE FROM user_auth_info")
+cur.execute("DELETE FROM user_info")
 cur.execute("DELETE FROM equipment_info")
 cur.execute("DELETE FROM team_info")
 cur.execute("DELETE FROM player_info")
@@ -47,7 +47,7 @@ conn.commit()
 cur.execute("VACUUM")
 conn.commit()
 for user in users:
-    cur.execute("INSERT INTO user_auth_info (username,pass,category) VALUES (?,?,?)",
+    cur.execute("INSERT INTO user_info (username,pass,category) VALUES (?,?,?)",
                 (user[0], get_password(user[1]), user[2])
                 )
     conn.commit()

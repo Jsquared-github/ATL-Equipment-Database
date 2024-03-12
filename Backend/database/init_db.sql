@@ -1,6 +1,6 @@
 PRAGMA foreign_keys = ON;
 
-CREATE TABLE user_auth_info(
+CREATE TABLE user_info(
     userID INTEGER PRIMARY KEY,
     username TEXT UNIQUE,
     pass TEXT,
@@ -9,12 +9,12 @@ CREATE TABLE user_auth_info(
 
 CREATE TABLE team_info(
     teamID INTEGER PRIMARY KEY,
-    teamName TEXT
+    teamName TEXT UNIQUE
 );
 
 CREATE TABLE equipment_info(
     equipmentID INTEGER PRIMARY KEY,
-    equipName TEXT,
+    equipName TEXT UNIQUE,
     unitPrice FLOAT,
     initQuantity INTEGER,
     currQuantity INTEGER
