@@ -232,18 +232,30 @@ def get_equipment(user: Annotated[User, Depends(auth.resolve_token)]):
 
 
 @app.post("/library/{equipment}")
-def check_out(user: Annotated[User, Depends(auth.resolve_token)], equipment: str, team: str,
-              quantity: int):
-    if user.category != "coach":
+def check_out(user: Annotated[User, Depends(auth.resolve_token)],
+              coach: str, team: str, equipment: str, quantity: int):
+    if user.category == "player":
         return HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to access this resource",
             headers={"Content-Type": "application/json"}
         )
-    db = getenv("DB_URL")
-    c_id = user.id
-    t_id = db.get_team_id(db, team)
-    e_id = db.get_equip_id(db, equipment)
+    db_url = getenv("DB_URL")
     date = dt_date.today().isoformat()
-    resp = db.checkout_equip(db, c_id, t_id, e_id, date, quantity)
+    resp = db.checkout_equip(db_url, coach, team, equipment, date, quantity)
+    return resp
+
+
+@ app.put("/library/{equipment}")
+def check_in(user: Annotated[User, Depends(auth.resolve_token)],
+             coach: str, team: str, equipment: str, quantity: int):
+    if user.category == "player":
+        return HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have permission to access this resource",
+            headers={"Content-Type": "application/json"}
+        )
+    db_url = getenv("DB_URL")
+    date = dt_date.today().isoformat()
+    resp = db.return_equip(db_url, coach, team, equipment, date, quantity)
     return resp

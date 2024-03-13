@@ -82,6 +82,18 @@ def get_current_coaches(db: str, cur=None):
     return coaches
 
 
+def get_coach_id(db: str, coach: str):
+    try:
+        con = sqlite3.connect(db)
+        cur = con.cursor()
+        id = cur.execute("SELECT userID FROM user_info \
+                    WHERE username = ?", (coach,)).fetchone()[0]
+        return id
+    finally:
+        cur.close()
+        con.close()
+
+
 def get_current_equipment(db: str, cur=None):
     if not cur:
         con = sqlite3.connect(db)
@@ -133,7 +145,7 @@ def get_team_id(db: str, team: str):
         con = sqlite3.connect(db)
         cur = con.cursor()
         id = cur.execute("SELECT teamID FROM team_info \
-                    WHERE equipName = ?", (team,)).fetchone()[0]
+                    WHERE teamName = ?", (team,)).fetchone()[0]
         return id
     finally:
         cur.close()
@@ -280,42 +292,62 @@ def delete_team(db: str, team: str):
         con.close()
 
 
-def checkout_equip(db: str, c_id: int, t_id: int, e_id: int,
-                   date: str, quantity: int):
+def checkout_equip(db: str, coach: int, team: int, equip: int,
+                   date: str, co_quantity: int):
     try:
         con = sqlite3.connect(db)
         cur = con.cursor()
+        c_id = get_coach_id(db, coach)
+        t_id = get_team_id(db, team)
+        e_id = get_equip_id(db, equip)
+        curr_quantity = cur.execute("SELECT currQuantity FROM equipment_info\
+                                    WHERE equipName = ?", (equip,)).fetchone()[0]
         entry_exists = cur.execute("SELECT COUNT(*) FROM activity_log\
                                    WHERE (cID = ? AND tID = ? AND eID = ? AND coDate = ?)",
                                    (c_id, t_id, e_id, date)).fetchone()[0]
+        if curr_quantity < co_quantity:
+            return f"There are only {curr_quantity} of {equip} able to be checked out"
         if not entry_exists:
             cur.execute("INSERT INTO activity_log (cID,tID,eID,coDate,equipDiff)\
-                        VALUES (?,?,?,?,?)", (c_id, t_id, e_id, date, -quantity))
-            cur.execute("UPDATE equipment_info SET currQuantity = currQuantity - ?\
-                    WHERE equipmentID = ?", (quantity, c_id))
+                        VALUES (?,?,?,?,?)", (c_id, t_id, e_id, date, -co_quantity))
+            cur.execute("UPDATE equipment_info SET currQuantity = (currQuantity - ?)\
+                    WHERE equipmentID = ?", (co_quantity, e_id))
         else:
             cur.execute("UPDATE activity_log SET equipDiff = equipDiff - ?\
                          WHERE (cID = ? AND tID = ? AND eID = ? AND coDate = ?)",
-                        (quantity, c_id, t_id, e_id, date))
-            cur.execute("UPDATE equipment_info SET currQuantity = currQuantity - ?\
-                    WHERE equipmentID = ?", (quantity, c_id))
+                        (co_quantity, c_id, t_id, e_id, date))
+            cur.execute("UPDATE equipment_info SET currQuantity = (currQuantity - ?)\
+                    WHERE equipmentID = ?", (co_quantity, e_id))
         con.commit()
+        return f"Checked out {co_quantity} of {equip}"
     finally:
         cur.close()
         con.close()
 
 
-def return_equip(db: str, c_id: int, t_id: int, e_id: int,
-                 date: str, quantity: int):
+def return_equip(db: str, coach: int, team: int, equip: int,
+                 date: str, ci_quantity: int):
     try:
         con = sqlite3.connect(db)
         cur = con.cursor()
-        cur.execute("UPDATE activity_log SET equipDiff = equipDiff + ?\
-                         WHERE (cID = ? AND tID = ? AND eID = ? AND coDate = ?)",
-                    (quantity, c_id, t_id, e_id, date))
-        cur.execute("UPDATE equipment_info SET currQuantity = currQuantity + ?\
-                    WHERE equipmentID = ?", (quantity, c_id))
+        c_id = get_coach_id(db, coach)
+        t_id = get_team_id(db, team)
+        e_id = get_equip_id(db, equip)
+        entry_exists = cur.execute("SELECT equipDiff FROM activity_log\
+                                   WHERE (cID = ? AND tID = ? AND eID = ? AND coDate = ?)",
+                                   (c_id, t_id, e_id, date)).fetchone()
+        if not entry_exists:
+            return f"{coach} has not checked out {equip} for {team} today"
+        elif entry_exists[0] == 0:
+            return f"{coach} has returned all checked out {equip} today"
+        else:
+            cur.execute("UPDATE activity_log SET equipDiff = equipDiff + ?\
+                            WHERE (cID = ? AND tID = ? AND eID = ? AND coDate = ?)",
+                        (ci_quantity, c_id, t_id, e_id, date))
+            cur.execute("UPDATE equipment_info SET currQuantity = currQuantity + ?\
+                        WHERE equipmentID = ?", (ci_quantity, e_id))
         con.commit()
+        return f"Checked in {ci_quantity} of {equip}"
     finally:
         cur.close()
         con.close()
