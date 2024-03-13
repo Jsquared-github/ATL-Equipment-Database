@@ -57,7 +57,7 @@ def get_current_players(db: str, cur=None):
     all_players = cur.execute("SELECT username FROM user_info\
                                WHERE category = 'player'").fetchall()
     player_teams = cur.execute("SELECT username,teamName FROM player_info pi\
-                            JOIN user_info uai ON pi.pID = uai.userID\
+                            JOIN user_info ui ON pi.pID = ui.userID\
                             JOIN team_info ti ON pi.tID = ti.teamID").fetchall()
     for player in all_players:
         players[player[0]] = {"teams": set()}
@@ -73,7 +73,7 @@ def get_current_coaches(db: str, cur=None):
     coaches = {}
     all_coaches = cur.execute("SELECT username FROM user_info WHERE category = 'coach'").fetchall()
     coach_teams = cur.execute("SELECT username,teamName FROM coach_info ci\
-                            JOIN user_info uai ON ci.coachID = uai.userID\
+                            JOIN user_info ui ON ci.coachID = ui.userID\
                             JOIN team_info ti ON ci.tID = ti.teamID").fetchall()
     for coach in all_coaches:
         coaches[coach[0]] = {"teams": set()}
@@ -95,6 +95,18 @@ def get_current_equipment(db: str, cur=None):
     return equipment
 
 
+def get_equip_id(db: str, equipment: str):
+    try:
+        con = sqlite3.connect(db)
+        cur = con.cursor()
+        id = cur.execute("SELECT equipmentID FROM equipment_info \
+                    WHERE equipName = ?", (equipment,)).fetchone()[0]
+        return id
+    finally:
+        cur.close()
+        con.close()
+
+
 def get_current_teams(db: str, cur=None):
     if not cur:
         con = sqlite3.connect(db)
@@ -114,6 +126,18 @@ def get_current_teams(db: str, cur=None):
     for coach in coach_counts:
         teams[coach[0]]["coaches"] = coach[1]
     return teams
+
+
+def get_team_id(db: str, team: str):
+    try:
+        con = sqlite3.connect(db)
+        cur = con.cursor()
+        id = cur.execute("SELECT teamID FROM team_info \
+                    WHERE equipName = ?", (team,)).fetchone()[0]
+        return id
+    finally:
+        cur.close()
+        con.close()
 
 
 def get_current_org(db: str):
@@ -251,6 +275,47 @@ def delete_team(db: str, team: str):
         cur.execute("DELETE FROM team_info WHERE teamName = ?", (team,))
         con.commit()
         return f"{team} deleted from library"
+    finally:
+        cur.close()
+        con.close()
+
+
+def checkout_equip(db: str, c_id: int, t_id: int, e_id: int,
+                   date: str, quantity: int):
+    try:
+        con = sqlite3.connect(db)
+        cur = con.cursor()
+        entry_exists = cur.execute("SELECT COUNT(*) FROM activity_log\
+                                   WHERE (cID = ? AND tID = ? AND eID = ? AND coDate = ?)",
+                                   (c_id, t_id, e_id, date)).fetchone()[0]
+        if not entry_exists:
+            cur.execute("INSERT INTO activity_log (cID,tID,eID,coDate,equipDiff)\
+                        VALUES (?,?,?,?,?)", (c_id, t_id, e_id, date, -quantity))
+            cur.execute("UPDATE equipment_info SET currQuantity = currQuantity - ?\
+                    WHERE equipmentID = ?", (quantity, c_id))
+        else:
+            cur.execute("UPDATE activity_log SET equipDiff = equipDiff - ?\
+                         WHERE (cID = ? AND tID = ? AND eID = ? AND coDate = ?)",
+                        (quantity, c_id, t_id, e_id, date))
+            cur.execute("UPDATE equipment_info SET currQuantity = currQuantity - ?\
+                    WHERE equipmentID = ?", (quantity, c_id))
+        con.commit()
+    finally:
+        cur.close()
+        con.close()
+
+
+def return_equip(db: str, c_id: int, t_id: int, e_id: int,
+                 date: str, quantity: int):
+    try:
+        con = sqlite3.connect(db)
+        cur = con.cursor()
+        cur.execute("UPDATE activity_log SET equipDiff = equipDiff + ?\
+                         WHERE (cID = ? AND tID = ? AND eID = ? AND coDate = ?)",
+                    (quantity, c_id, t_id, e_id, date))
+        cur.execute("UPDATE equipment_info SET currQuantity = currQuantity + ?\
+                    WHERE equipmentID = ?", (quantity, c_id))
+        con.commit()
     finally:
         cur.close()
         con.close()

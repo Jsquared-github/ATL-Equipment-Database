@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, date as dt_date
 from typing import Annotated
 from dotenv import load_dotenv
 from os import getenv
@@ -216,4 +216,34 @@ def delete_equipment(user: Annotated[User, Depends(auth.resolve_token)], equip: 
             headers={"Content-Type": "application/json"}
         )
     resp = db.delete_equip(getenv("DB_URL"), equip)
+    return resp
+
+
+@app.get("/library")
+def get_equipment(user: Annotated[User, Depends(auth.resolve_token)]):
+    if user.category == "player":
+        return HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have permission to access this resource",
+            headers={"Content-Type": "application/json"}
+        )
+    resp = db.get_current_equipment(getenv("DB_URL"))
+    return resp
+
+
+@app.post("/library/{equipment}")
+def check_out(user: Annotated[User, Depends(auth.resolve_token)], equipment: str, team: str,
+              quantity: int):
+    if user.category != "coach":
+        return HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have permission to access this resource",
+            headers={"Content-Type": "application/json"}
+        )
+    db = getenv("DB_URL")
+    c_id = user.id
+    t_id = db.get_team_id(db, team)
+    e_id = db.get_equip_id(db, equipment)
+    date = dt_date.today().isoformat()
+    resp = db.checkout_equip(db, c_id, t_id, e_id, date, quantity)
     return resp

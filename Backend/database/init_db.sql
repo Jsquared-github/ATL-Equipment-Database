@@ -39,10 +39,10 @@ CREATE TABLE coach_info(
 CREATE TABLE activity_log(
     cID INTEGER,
     tID INTEGER,
-    coDate TEXT,
     eID INTEGER,
+    coDate TEXT,
     equipDiff INTEGER,
-    PRIMARY KEY(cID,tID, coDate),
+    PRIMARY KEY(cID,tID, eId, coDate),
     FOREIGN KEY(cID) REFERENCES coach_info(coachID) ON DELETE CASCADE,
     FOREIGN KEY(tID) REFERENCES team_info(teamID) ON DELETE CASCADE,
     FOREIGN KEY(eID) REFERENCES equipment_info(equpmentID) ON DELETE CASCADE
