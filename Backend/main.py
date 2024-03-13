@@ -7,7 +7,7 @@ from fastapi import FastAPI, Depends, status, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 
 
-from functions import auth, db
+from functions import auth, db, password
 from datamodels import User, Token
 
 load_dotenv(".env")
@@ -26,6 +26,16 @@ def login(form: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     expirey = timedelta(minutes=int(getenv("DEFAULT_EXPIRE")))
     access_token = auth.create_access_token(data={"sub": user.username}, expires_delta=expirey)
     return Token(access_token=access_token, token_type="Bearer")
+
+
+@app.post("/create-account")
+def create_account(username: str, pwd: str, category: str):
+    exists = db.check_for_user(getenv("DB_URL"), username)
+    if not exists:
+        pwd = password.get_password(pwd)
+        resp = db.create_user(getenv("DB_URL"), username, pwd, category)
+        return resp
+    return f"Account with username: {username} already exists. Please choose a different one"
 
 
 @app.get("/org")

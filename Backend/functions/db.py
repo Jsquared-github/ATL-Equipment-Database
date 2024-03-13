@@ -3,6 +3,33 @@ from datamodels import User, UserInDB
 import sqlite3
 
 
+def check_for_user(db: str, username: str):
+    try:
+        con = sqlite3.connect(db)
+        cur = con.cursor()
+        exists = cur.execute("SELECT COUNT(*) FROM user_info\
+                    WHERE username = ?", (username,)).fetchone()[0]
+        if exists:
+            return 1
+        return 0
+    finally:
+        cur.close()
+        con.close()
+
+
+def create_user(db: str, username: str, pwd: str, category: str):
+    try:
+        con = sqlite3.connect(db)
+        cur = con.cursor()
+        cur.execute("INSERT INTO user_info (username,pass, category)\
+                    VALUES (?,?,?)", (username, pwd, category))
+        con.commit()
+        return f"{category} account created"
+    finally:
+        cur.close()
+        con.close()
+
+
 def get_user(db: str, username: str, include_pwd: bool = True):
     try:
         con = sqlite3.connect(db)
@@ -18,7 +45,6 @@ def get_user(db: str, username: str, include_pwd: bool = True):
             return User(**user)
 
     finally:
-        pass
         cur.close()
         con.close()
 
@@ -28,15 +54,15 @@ def get_current_players(db: str, cur=None):
         con = sqlite3.connect(db)
         cur = con.cursor()
     players = {}
-    player_info = cur.execute("SELECT username,teamName FROM player_info pi\
+    all_players = cur.execute("SELECT username FROM user_info\
+                               WHERE category = 'player'").fetchall()
+    player_teams = cur.execute("SELECT username,teamName FROM player_info pi\
                             JOIN user_info uai ON pi.pID = uai.userID\
                             JOIN team_info ti ON pi.tID = ti.teamID").fetchall()
-    for player in player_info:
-        if players.get(player[0]):
-            players[player[0]]["teams"].add(player[1])
-        else:
-            players[player[0]] = {"teams": set()}
-            players[player[0]]["teams"].add(player[1])
+    for player in all_players:
+        players[player[0]] = {"teams": set()}
+    for player in player_teams:
+        players[player[0]]["teams"].add(player[1])
     return players
 
 
@@ -45,15 +71,14 @@ def get_current_coaches(db: str, cur=None):
         con = sqlite3.connect(db)
         cur = con.cursor()
     coaches = {}
-    coach_info = cur.execute("SELECT username,teamName FROM coach_info ci\
+    all_coaches = cur.execute("SELECT username FROM user_info WHERE category = 'coach'").fetchall()
+    coach_teams = cur.execute("SELECT username,teamName FROM coach_info ci\
                             JOIN user_info uai ON ci.coachID = uai.userID\
                             JOIN team_info ti ON ci.tID = ti.teamID").fetchall()
-    for coach in coach_info:
-        if coaches.get(coach[0]):
-            coaches[coach[0]]["teams"].add(coach[1])
-        else:
-            coaches[coach[0]] = {"teams": set()}
-            coaches[coach[0]]["teams"].add(coach[1])
+    for coach in all_coaches:
+        coaches[coach[0]] = {"teams": set()}
+    for coach in coach_teams:
+        coaches[coach[0]]["teams"].add(coach[1])
     return coaches
 
 
