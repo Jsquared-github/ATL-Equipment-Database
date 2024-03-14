@@ -1,4 +1,4 @@
 from . import auth
 from . import password
 from . import db
-from . import test_data
+from .test_data import generate_test_data

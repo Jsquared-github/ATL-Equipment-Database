@@ -7,18 +7,17 @@ from fastapi import FastAPI, Depends, status, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 
 
-from functions import auth, db, password
+from functions import auth, db, password, generate_test_data
 from datamodels import User, Token
 
 load_dotenv(".env")
 app = FastAPI()
 
 
-@app.get("/dashboard")
-def get_dashboard(user: Annotated[User, Depends(auth.resolve_token)], coach: str | None = None,
-                  team: str | None = None, period: str | None = None):
-    resp = db.dashboard(getenv("DB_URL"), coach, team, period)
-    return resp
+@app.post("/test")
+def generate_random_data():
+    generate_test_data()
+    return "Random Data Generated"
 
 
 @app.post("/login")
@@ -32,6 +31,13 @@ def login(form: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
         )
     access_token = auth.create_access_token(data={"sub": user.username})
     return Token(access_token=access_token, token_type="Bearer")
+
+
+@app.get("/dashboard")
+def get_dashboard(user: Annotated[User, Depends(auth.resolve_token)], coach: str | None = None,
+                  team: str | None = None, period: str | None = None):
+    resp = db.get_dashboard(getenv("DB_URL"), coach, team, period)
+    return resp
 
 
 @app.post("/create-account")
