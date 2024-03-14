@@ -1,4 +1,4 @@
-from datetime import timedelta, date as dt_date
+from datetime import date as dt_date
 from typing import Annotated
 from dotenv import load_dotenv
 from os import getenv
@@ -14,6 +14,13 @@ load_dotenv(".env")
 app = FastAPI()
 
 
+@app.get("/dashboard")
+def get_dashboard(user: Annotated[User, Depends(auth.resolve_token)], coach: str | None = None,
+                  team: str | None = None, period: str | None = None):
+    resp = db.dashboard(getenv("DB_URL"), coach, team, period)
+    return resp
+
+
 @app.post("/login")
 def login(form: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     user = auth.authenticate_user(getenv("DB_URL"), form.username, form.password)
@@ -23,8 +30,7 @@ def login(form: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"}
         )
-    expirey = timedelta(minutes=int(getenv("DEFAULT_EXPIRE")))
-    access_token = auth.create_access_token(data={"sub": user.username}, expires_delta=expirey)
+    access_token = auth.create_access_token(data={"sub": user.username})
     return Token(access_token=access_token, token_type="Bearer")
 
 
@@ -241,8 +247,7 @@ def check_out(user: Annotated[User, Depends(auth.resolve_token)],
             headers={"Content-Type": "application/json"}
         )
     db_url = getenv("DB_URL")
-    date = dt_date.today().isoformat()
-    resp = db.checkout_equip(db_url, coach, team, equipment, date, quantity)
+    resp = db.checkout_equip(db_url, coach, team, equipment, quantity)
     return resp
 
 
@@ -257,5 +262,5 @@ def check_in(user: Annotated[User, Depends(auth.resolve_token)],
         )
     db_url = getenv("DB_URL")
     date = dt_date.today().isoformat()
-    resp = db.return_equip(db_url, coach, team, equipment, date, quantity)
+    resp = db.return_equip(db_url, coach, team, equipment, quantity)
     return resp

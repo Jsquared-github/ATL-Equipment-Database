@@ -1,4 +1,5 @@
 from datamodels import User, UserInDB
+from datetime import date, timedelta, datetime
 
 import sqlite3
 
@@ -82,7 +83,9 @@ def get_current_coaches(db: str, cur=None):
     return coaches
 
 
-def get_coach_id(db: str, coach: str):
+def get_coach_id(db: str, coach: str | None):
+    if coach == None:
+        return None
     try:
         con = sqlite3.connect(db)
         cur = con.cursor()
@@ -140,7 +143,9 @@ def get_current_teams(db: str, cur=None):
     return teams
 
 
-def get_team_id(db: str, team: str):
+def get_team_id(db: str, team: str | None):
+    if team == None:
+        return None
     try:
         con = sqlite3.connect(db)
         cur = con.cursor()
@@ -293,10 +298,11 @@ def delete_team(db: str, team: str):
 
 
 def checkout_equip(db: str, coach: int, team: int, equip: int,
-                   date: str, co_quantity: int):
+                   co_quantity: int):
     try:
         con = sqlite3.connect(db)
         cur = con.cursor()
+        co_date = date.today().isoformat()
         c_id = get_coach_id(db, coach)
         t_id = get_team_id(db, team)
         e_id = get_equip_id(db, equip)
@@ -304,18 +310,18 @@ def checkout_equip(db: str, coach: int, team: int, equip: int,
                                     WHERE equipName = ?", (equip,)).fetchone()[0]
         entry_exists = cur.execute("SELECT COUNT(*) FROM activity_log\
                                    WHERE (cID = ? AND tID = ? AND eID = ? AND coDate = ?)",
-                                   (c_id, t_id, e_id, date)).fetchone()[0]
+                                   (c_id, t_id, e_id, co_date)).fetchone()[0]
         if curr_quantity < co_quantity:
             return f"There are only {curr_quantity} of {equip} able to be checked out"
         if not entry_exists:
             cur.execute("INSERT INTO activity_log (cID,tID,eID,coDate,equipDiff)\
-                        VALUES (?,?,?,?,?)", (c_id, t_id, e_id, date, -co_quantity))
+                        VALUES (?,?,?,?,?)", (c_id, t_id, e_id, co_date, -co_quantity))
             cur.execute("UPDATE equipment_info SET currQuantity = (currQuantity - ?)\
                     WHERE equipmentID = ?", (co_quantity, e_id))
         else:
             cur.execute("UPDATE activity_log SET equipDiff = equipDiff - ?\
                          WHERE (cID = ? AND tID = ? AND eID = ? AND coDate = ?)",
-                        (co_quantity, c_id, t_id, e_id, date))
+                        (co_quantity, c_id, t_id, e_id, co_date))
             cur.execute("UPDATE equipment_info SET currQuantity = (currQuantity - ?)\
                     WHERE equipmentID = ?", (co_quantity, e_id))
         con.commit()
@@ -325,17 +331,17 @@ def checkout_equip(db: str, coach: int, team: int, equip: int,
         con.close()
 
 
-def return_equip(db: str, coach: int, team: int, equip: int,
-                 date: str, ci_quantity: int):
+def return_equip(db: str, coach: int, team: int, equip: int, ci_quantity: int):
     try:
         con = sqlite3.connect(db)
         cur = con.cursor()
+        ci_date = date.today().isoformat()
         c_id = get_coach_id(db, coach)
         t_id = get_team_id(db, team)
         e_id = get_equip_id(db, equip)
         entry_exists = cur.execute("SELECT equipDiff FROM activity_log\
                                    WHERE (cID = ? AND tID = ? AND eID = ? AND coDate = ?)",
-                                   (c_id, t_id, e_id, date)).fetchone()
+                                   (c_id, t_id, e_id, ci_date)).fetchone()
         if not entry_exists:
             return f"{coach} has not checked out {equip} for {team} today"
         elif entry_exists[0] == 0:
@@ -343,11 +349,61 @@ def return_equip(db: str, coach: int, team: int, equip: int,
         else:
             cur.execute("UPDATE activity_log SET equipDiff = equipDiff + ?\
                             WHERE (cID = ? AND tID = ? AND eID = ? AND coDate = ?)",
-                        (ci_quantity, c_id, t_id, e_id, date))
+                        (ci_quantity, c_id, t_id, e_id, ci_date))
             cur.execute("UPDATE equipment_info SET currQuantity = currQuantity + ?\
                         WHERE equipmentID = ?", (ci_quantity, e_id))
         con.commit()
         return f"Checked in {ci_quantity} of {equip}"
+    finally:
+        cur.close()
+        con.close()
+
+
+def get_period(period: str | None):
+    if not period:
+        return None
+    elif period == "day":
+        return (datetime.now() - timedelta(days=1)).date()
+    elif period == "week":
+        return (datetime.now() - timedelta(weeks=1)).date()
+    elif period == "month":
+        return (datetime.now() - timedelta(days=30)).date()
+
+
+def dashboard(db: str, coach: str | None = None,
+              team: str | None = None, period: str | None = None):
+    try:
+        con = sqlite3.connect(db)
+        cur = con.cursor()
+        period = get_period(period)
+        c_id = get_coach_id(db, coach)
+        t_id = get_team_id(db, team)
+        if (c_id and t_id and period):
+            # all filters
+            pass
+        elif not (c_id or t_id or period):
+            # no filters
+            pass
+        elif not period:
+            if not t_id:
+                # coach filter
+                pass
+            elif not c_id:
+                # team filter
+                pass
+            else:
+                # team, coach
+                pass
+        elif not c_id:
+            if not t_id:
+                # period filter
+                pass
+            else:
+                pass
+                # period, team filter
+        else:
+            pass
+            # period, coach filter
     finally:
         cur.close()
         con.close()
