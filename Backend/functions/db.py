@@ -373,15 +373,15 @@ def get_period(period: str | None):
         return offset, 30
 
 
-def calculate_metrics(cur, logs: list, days: int | None):
+def calculate_dashboard_metrics(cur, logs: list, days: int | None):
     equips_lost = {}
     dashboard = {"total_equip_lost": 0,
-                 "total_cost": float(0),
+                 "total_cost": 0,
                  "avg_daily_equip_loss": float(0),
-                 "avg_daily_cost": 0,
+                 "avg_daily_cost": float(0),
                  "top_equips_lost": "No Lost Equipment"
                  }
-    if not days:
+    if days is None:
         start_date = date.fromisoformat(logs[0][2])
         end_date = date.today()
         days = (end_date - start_date).days
@@ -404,6 +404,127 @@ def calculate_metrics(cur, logs: list, days: int | None):
     return dashboard
 
 
+def get_coach_stats(cur, period: str | None, days: int | None, metric: str):
+    coach_stats = []
+    coaches = cur.execute("SELECT userID, username FROM user_info \
+                              WHERE category = ?", ("coach",)).fetchall()
+    if period is None:
+        for coach in coaches:
+            coach_metrics = {
+                "name": coach[1],
+                "total_equip_lost": 0,
+                "total_cost": 0,
+                "avg_daily_cost": float(0),
+                "avg_daily_loss": float(0)
+            }
+            logs = cur.execute("SELECT eID, equipDiff, coDate FROM activity_log\
+                            WHERE cID = ?", (coach[0],)).fetchall()
+            if days is None:
+                start_date = date.fromisoformat(logs[0][2])
+                end_date = date.today()
+                days = (end_date - start_date).days
+                if days == 0:
+                    days = 1
+            for log in logs:
+                equip_info = cur.execute("SELECT equipName,unitPrice FROM equipment_info\
+                                    WHERE equipmentID = ?", (log[0],)).fetchone()
+                coach_metrics["total_equip_lost"] += -log[1]
+                coach_metrics["total_cost"] += -(log[1]*equip_info[1])
+            coach_metrics["avg_daily_loss"] = round((coach_metrics["total_equip_lost"]/days), 2)
+            coach_metrics["avg_daily_cost"] = round((coach_metrics["total_cost"]/days), 2)
+            coach_stats.append(coach_metrics)
+    else:
+        for coach in coaches:
+            coach_metrics = {
+                "name": coach[1],
+                "total_equip_lost": 0,
+                "total_cost": 0,
+                "avg_daily_cost": float(0),
+                "avg_daily_loss": float(0)
+            }
+            logs = cur.execute("SELECT eID, equipDiff, coDate FROM activity_log\
+                            WHERE cID = ? AND coDate >= ?", (coach[0], period)).fetchall()
+            if days is None:
+                start_date = date.fromisoformat(logs[0][2])
+                end_date = date.today()
+                days = (end_date - start_date).days
+                if days == 0:
+                    days = 1
+            for log in logs:
+                equip_info = cur.execute("SELECT equipName,unitPrice FROM equipment_info\
+                                    WHERE equipmentID = ?", (log[0],)).fetchone()
+                coach_metrics["total_equip_lost"] += -log[1]
+                coach_metrics["total_cost"] += -(log[1]*equip_info[1])
+            coach_metrics["avg_daily_loss"] = round((coach_metrics["total_equip_lost"]/days), 2)
+            coach_metrics["avg_daily_cost"] = round((coach_metrics["total_cost"]/days), 2)
+            coach_stats.append(coach_metrics)
+    if metric == "items_lost":
+        coach_stats = sorted(coach_stats, key=lambda x: x["total_equip_lost"])
+    elif metric == "cost":
+        coach_stats = sorted(coach_stats, key=lambda x: x["total_cost"])
+    return coach_stats
+
+
+def get_team_stats(cur, period: str | None, days: int | None, metric: str):
+    team_stats = []
+    teams = cur.execute("SELECT teamID,teamName FROM team_info").fetchall()
+    if period is None:
+        for team in teams:
+            team_metrics = {
+                "name": team[1],
+                "total_equip_lost": 0,
+                "total_cost": 0,
+                "avg_daily_cost": float(0),
+                "avg_daily_loss": float(0)
+            }
+            logs = cur.execute("SELECT eID, equipDiff, coDate FROM activity_log\
+                            WHERE tID = ?", (team[0],)).fetchall()
+            if days is None:
+                start_date = date.fromisoformat(logs[0][2])
+                end_date = date.today()
+                days = (end_date - start_date).days
+                if days == 0:
+                    days = 1
+            for log in logs:
+                equip_info = cur.execute("SELECT equipName,unitPrice FROM equipment_info\
+                                    WHERE equipmentID = ?", (log[0],)).fetchone()
+                team_metrics["total_equip_lost"] += -log[1]
+                team_metrics["total_cost"] += -(log[1]*equip_info[1])
+            team_metrics["avg_daily_loss"] = round((team_metrics["total_equip_lost"]/days), 2)
+            team_metrics["avg_daily_cost"] = round((team_metrics["total_cost"]/days), 2)
+            team_stats.append(team_metrics)
+    else:
+        for team in teams:
+            team_metrics = {
+                "name": team[1],
+                "total_equip_lost": 0,
+                "total_cost": 0,
+                "avg_daily_cost": float(0),
+                "avg_daily_loss": float(0)
+            }
+            logs = cur.execute("SELECT eID, equipDiff, coDate FROM activity_log\
+                            WHERE tID = ? AND coDate >= ?", (team[0], period)).fetchall()
+            if days is None:
+                start_date = date.fromisoformat(logs[0][2])
+                end_date = date.today()
+                days = (end_date - start_date).days
+                if days == 0:
+                    days = 1
+            for log in logs:
+                equip_info = cur.execute("SELECT equipName,unitPrice FROM equipment_info\
+                                    WHERE equipmentID = ?", (log[0],)).fetchone()
+                team_metrics["total_equip_lost"] += -log[1]
+                team_metrics["total_cost"] += -(log[1]*equip_info[1])
+            team_metrics["avg_daily_loss"] = round((team_metrics["total_equip_lost"]/days), 2)
+            team_metrics["avg_daily_cost"] = round((team_metrics["total_cost"]/days), 2)
+            team_stats.append(team_metrics)
+    if metric == "items_lost":
+        team_stats = sorted(team_stats, key=lambda x: x["total_equip_lost"])
+    elif metric == "cost":
+        team_stats = sorted(team_stats, key=lambda x: x["total_cost"])
+    return team_stats
+
+
 def get_dashboard(db: str, coach: str | None = None,
                   team: str | None = None, period: str | None = None):
     try:
@@ -416,50 +537,64 @@ def get_dashboard(db: str, coach: str | None = None,
             logs = cur.execute("SELECT eID, equipDiff, coDate FROM activity_log\
                                WHERE (cID = ? AND tID = ? AND coDate >= ?)",
                                (c_id, t_id, offset)).fetchall()
-            dashboard = calculate_metrics(cur, logs, days)
+            dashboard = calculate_dashboard_metrics(cur, logs, days)
             return dashboard
         elif not (c_id or t_id or period):
             logs = cur.execute("SELECT eID, equipDiff, coDate FROM activity_log").fetchall()
-            dashboard = calculate_metrics(cur, logs, days)
+            dashboard = calculate_dashboard_metrics(cur, logs, days)
             return dashboard
         elif not period:
             if not t_id:
                 logs = cur.execute("SELECT eID, equipDiff, coDate FROM activity_log\
-                               WHERE (cID = ?)",
+                                    WHERE (cID = ?)",
                                    (c_id, )).fetchall()
-                dashboard = calculate_metrics(cur, logs, days)
+                dashboard = calculate_dashboard_metrics(cur, logs, days)
                 return dashboard
             elif not c_id:
                 logs = cur.execute("SELECT eID, equipDiff, coDate FROM activity_log\
-                               WHERE (tID = ?)",
+                                    WHERE (tID = ?)",
                                    (t_id,)).fetchall()
-                dashboard = calculate_metrics(cur, logs, days)
+                dashboard = calculate_dashboard_metrics(cur, logs, days)
                 return dashboard
             else:
                 logs = cur.execute("SELECT eID, equipDiff, coDate FROM activity_log\
-                               WHERE (cID = ? AND tID = ?)",
+                                    WHERE (cID = ? AND tID = ?)",
                                    (c_id, t_id)).fetchall()
-                dashboard = calculate_metrics(cur, logs, days)
+                dashboard = calculate_dashboard_metrics(cur, logs, days)
                 return dashboard
         elif not c_id:
             if not t_id:
                 logs = cur.execute("SELECT eID, equipDiff, coDate FROM activity_log\
-                               WHERE (coDate >= ?)",
+                                    WHERE (coDate >= ?)",
                                    (offset,)).fetchall()
-                dashboard = calculate_metrics(cur, logs, days)
+                dashboard = calculate_dashboard_metrics(cur, logs, days)
                 return dashboard
             else:
                 logs = cur.execute("SELECT eID, equipDiff, coDate FROM activity_log\
-                               WHERE (tID = ? AND coDate >= ?)",
+                                    WHERE (tID = ? AND coDate >= ?)",
                                    (t_id, offset)).fetchall()
-                dashboard = calculate_metrics(cur, logs, days)
+                dashboard = calculate_dashboard_metrics(cur, logs, days)
                 return dashboard
         elif not t_id:
             logs = cur.execute("SELECT eID, equipDiff, coDate FROM activity_log\
                                WHERE (cID = ?  AND coDate >= ?)",
                                (c_id, offset)).fetchall()
-            dashboard = calculate_metrics(cur, logs, days)
+            dashboard = calculate_dashboard_metrics(cur, logs, days)
             return dashboard
+    finally:
+        cur.close()
+        con.close()
+
+
+def get_leaderboard(db: str, metric: str, period: str):
+    try:
+        con = sqlite3.connect(db)
+        cur = con.cursor()
+        (offset, days) = get_period(period)
+        leaderboard = {"coach_stats": [], "team_stats": []}
+        leaderboard["coach_stats"] = get_coach_stats(cur, offset, days, metric)
+        leaderboard["team_stats"] = get_team_stats(cur, offset, days, metric)
+        return leaderboard
     finally:
         cur.close()
         con.close()
