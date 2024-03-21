@@ -16,11 +16,11 @@ export const server_loads = [];
 
 export const dictionary = {
 		"/": [3],
-		"/Dashboard": [5],
-		"/Home": [6,[2]],
-		"/Leaderboard": [7],
-		"/Library": [8],
-		"/about": [4]
+		"/about": [4],
+		"/dashboard": [5],
+		"/home": [6,[2]],
+		"/leaderboard": [7],
+		"/library": [8]
 	};
 
 export const hooks = {
