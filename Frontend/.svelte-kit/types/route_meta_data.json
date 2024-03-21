@@ -1,0 +1,14 @@
+{
+	"/": [
+		"src/routes/+page.ts"
+	],
+	"/Dashboard": [],
+	"/Home": [
+		"src/routes/Home/+page.ts"
+	],
+	"/Leaderboard": [],
+	"/Library": [],
+	"/about": [
+		"src/routes/about/+page.ts"
+	]
+}
