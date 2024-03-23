@@ -72,7 +72,14 @@ def get_curr_org(user: Annotated[User, Depends(auth.resolve_token)]):
 
 
 @app.post("/org")
-def create_account(username: str, pwd: str, category: str):
+def create_account(user: Annotated[User, Depends(auth.resolve_token)], username: str,
+                   pwd: str, category: str):
+    if user.category != "admin":
+        return HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have permission to access this resource",
+            headers={"Content-Type": "application/json"}
+        )
     exists = db.check_for_user(getenv("DB_URL"), username)
     if not exists:
         pwd = password.get_password(pwd)

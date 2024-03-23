@@ -17,6 +17,66 @@
 		const data = await resp.json();
 		console.log(data);
 	});
+
+	const createAccount = async (e: HTMLFormElement) => {
+		const form = new FormData(e.target);
+		const formData = {};
+		for (let field of form) {
+			const [key, value] = field;
+			formData[key] = value;
+		}
+		let params = [
+			['username', formData['username']],
+			['pwd', formData['password']],
+			['category', formData['category']]
+		];
+		let endpoint = 'http://127.0.0.1:8000/org?';
+		for (let param of params) {
+			if (param[1] == '') {
+				console.log('Fill in all fields');
+				return;
+			}
+			if (endpoint.slice(-1) !== '?') {
+				endpoint += `&${param[0]}=${param[1]}`;
+			} else {
+				endpoint += `${param[0]}=${param[1]}`;
+			}
+		}
+		const resp = await fetch(endpoint, {
+			method: 'POST',
+			headers: { Authorization: `Bearer ${localStorage.token}` }
+		});
+		const data = await resp.json();
+		console.log(data);
+	};
+
+	const deleteCoach = async (e: HTMLFormElement) => {
+		const form = new FormData(e.target);
+		const formData = {};
+		for (let field of form) {
+			const [key, value] = field;
+			formData[key] = value;
+		}
+		let params = [['coach', formData['coach']]];
+		let endpoint = 'http://127.0.0.1:8000/org/coaches?';
+		for (let param of params) {
+			if (param[1] == '') {
+				console.log('Fill in all fields');
+				return;
+			}
+			if (endpoint.slice(-1) !== '?') {
+				endpoint += `&${param[0]}=${param[1]}`;
+			} else {
+				endpoint += `${param[0]}=${param[1]}`;
+			}
+		}
+		const resp = await fetch(endpoint, {
+			method: 'DELETE',
+			headers: { Authorization: `Bearer ${localStorage.token}` }
+		});
+		const data = await resp.json();
+		console.log(data);
+	};
 	// import { getUsername } from './+page'; // You don't need to import getUsername here anymore
 	// import Item from './item.svelte';
 	// import Carousel from './carousel.svelte';
@@ -52,6 +112,16 @@
 
 	<div class="checkout-button-container">
 		<button>Check out additional items</button>
+	</div>
+
+	<div class="login-container">
+		<form on:submit={deleteCoach}>
+			<div class="input-group">
+				<label for="coach">coach:</label>
+				<input id="coach" name="coach" type="text" value="" placeholder="Enter your coach" />
+			</div>
+			<button type="submit">submit</button>
+		</form>
 	</div>
 </section>
 
