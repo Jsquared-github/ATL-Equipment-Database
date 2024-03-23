@@ -34,7 +34,7 @@ def generate_test_data():
         ("mini_goal", 10.00, 10, 10)
     ]
 
-    max_user_id, max_team_id, max_equip_id = (len(users), len(teams), len(equipments))
+    max_team_id = len(teams)
 
     try:
         conn = sqlite3.connect("database/library.db")

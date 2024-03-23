@@ -16,7 +16,10 @@
 			body: form
 		});
 		const user = await resp.json();
-		console.log(user.access_token);
+		if (!Object.hasOwn(user, 'access_token')) {
+			console.log('Incorrect Username and/or Password');
+			return;
+		}
 		localStorage.setItem('token', user.access_token);
 		routeToPage('home', false);
 	};

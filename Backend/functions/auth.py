@@ -16,9 +16,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 def authenticate_user(db, username: str, password: str):
     user = get_user(db, username)
     if not user:
-        return False
+        return None
     if not verify_password(password, user.hashed_password):
-        return False
+        return None
     return user
 
 

@@ -54,19 +54,9 @@ def get_dashboard(user: Annotated[User, Depends(auth.resolve_token)], coach: Opt
 def get_leaderboard(user: Annotated[User, Depends(auth.resolve_token)], metric: Optional[str] = None,
                     period: Optional[str] = None):
     if metric is None:
-        metric = "items_lost"
+        metric = "items"
     resp = db.get_leaderboard(getenv("DB_URL"), metric, period)
     return resp
-
-
-@app.post("/create-account")
-def create_account(username: str, pwd: str, category: str):
-    exists = db.check_for_user(getenv("DB_URL"), username)
-    if not exists:
-        pwd = password.get_password(pwd)
-        resp = db.create_user(getenv("DB_URL"), username, pwd, category)
-        return resp
-    return f"Account with username: {username} already exists. Please choose a different one"
 
 
 @app.get("/org")
@@ -81,19 +71,17 @@ def get_curr_org(user: Annotated[User, Depends(auth.resolve_token)]):
     return curr_org
 
 
-@app.get("/org/coaches")
-def get_curr_coaches(user: Annotated[User, Depends(auth.resolve_token)]):
-    if user.category != "admin":
-        return HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to access this resource",
-            headers={"Content-Type": "application/json"}
-        )
-    coaches = db.get_current_coaches(getenv("DB_URL"))
-    return coaches
+@app.post("/org")
+def create_account(username: str, pwd: str, category: str):
+    exists = db.check_for_user(getenv("DB_URL"), username)
+    if not exists:
+        pwd = password.get_password(pwd)
+        resp = db.create_user(getenv("DB_URL"), username, pwd, category)
+        return resp
+    return f"Account with username: {username} already exists. Please choose a different one"
 
 
-@app.delete("/org/coaches/{coach}")
+@app.delete("/org/coaches")
 def delete_coach(user: Annotated[User, Depends(auth.resolve_token)], coach: str):
     if user.category != "admin":
         return HTTPException(
@@ -117,7 +105,7 @@ def assign_coach(user: Annotated[User, Depends(auth.resolve_token)], coach: str,
     return resp
 
 
-@app.delete("/org/coaches/{coach}/{team}")
+@app.delete("/org/coaches/{coach}")
 def unassign_coach(user: Annotated[User, Depends(auth.resolve_token)], coach: str, team: str):
     if user.category != "admin":
         return HTTPException(
@@ -129,19 +117,7 @@ def unassign_coach(user: Annotated[User, Depends(auth.resolve_token)], coach: st
     return resp
 
 
-@app.get("/org/players")
-def get_curr_players(user: Annotated[User, Depends(auth.resolve_token)]):
-    if user.category != "admin":
-        return HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to access this resource",
-            headers={"Content-Type": "application/json"}
-        )
-    players = db.get_current_players(getenv("DB_URL"))
-    return players
-
-
-@app.delete("/org/players/{player}")
+@app.delete("/org/players")
 def delete_player(user: Annotated[User, Depends(auth.resolve_token)], player: str):
     if user.category != "admin":
         return HTTPException(
@@ -165,7 +141,7 @@ def assign_player(user: Annotated[User, Depends(auth.resolve_token)], player: st
     return resp
 
 
-@app.delete("/org/players/{player}/{team}")
+@app.delete("/org/players/{player}")
 def unassign_player(user: Annotated[User, Depends(auth.resolve_token)], player: str, team: str):
     if user.category != "admin":
         return HTTPException(
@@ -177,19 +153,7 @@ def unassign_player(user: Annotated[User, Depends(auth.resolve_token)], player: 
     return resp
 
 
-@app.get("/org/teams")
-def get_curr_teams(user: Annotated[User, Depends(auth.resolve_token)]):
-    if user.category != "admin":
-        return HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to access this resource",
-            headers={"Content-Type": "application/json"}
-        )
-    teams = db.get_current_teams(getenv("DB_URL"))
-    return teams
-
-
-@app.post("/org/teams/{team}")
+@app.post("/org/teams")
 def create_team(user: Annotated[User, Depends(auth.resolve_token)], team: str):
     if user.category != "admin":
         return HTTPException(
@@ -201,7 +165,7 @@ def create_team(user: Annotated[User, Depends(auth.resolve_token)], team: str):
     return resp
 
 
-@app.delete("/org/teams/{team}")
+@app.delete("/org/teams")
 def delete_team(user: Annotated[User, Depends(auth.resolve_token)], team: str):
     if user.category != "admin":
         return HTTPException(
@@ -213,19 +177,7 @@ def delete_team(user: Annotated[User, Depends(auth.resolve_token)], team: str):
     return resp
 
 
-@app.get("/org/equipment")
-def get_curr_equipment(user: Annotated[User, Depends(auth.resolve_token)]):
-    if user.category != "admin":
-        return HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to access this resource",
-            headers={"Content-Type": "application/json"}
-        )
-    equipment = db.get_current_equipment(getenv("DB_URL"))
-    return equipment
-
-
-@app.post("/org/equipment/{equip}")
+@app.post("/org/equipment")
 def create_equip(user: Annotated[User, Depends(auth.resolve_token)], equip: str,
                  unit_price: float, quantity: int):
     if user.category != "admin":
@@ -238,7 +190,7 @@ def create_equip(user: Annotated[User, Depends(auth.resolve_token)], equip: str,
     return resp
 
 
-@app.delete("/org/equipment/{equip}")
+@app.delete("/org/equipment")
 def delete_equipment(user: Annotated[User, Depends(auth.resolve_token)], equip: str):
     if user.category != "admin":
         return HTTPException(

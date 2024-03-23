@@ -36,6 +36,8 @@ def get_user(db: str, username: str, include_pwd: bool = True):
         con = sqlite3.connect(db)
         cur = con.cursor()
         user_data = cur.execute("SELECT * FROM user_info WHERE username = ?", (username,)).fetchone()
+        if not user_data:
+            return None
         if include_pwd:
             user = {"id": user_data[0], "username": user_data[1],
                     "hashed_password": user_data[2], "category": user_data[3]
@@ -382,7 +384,10 @@ def calculate_dashboard_metrics(cur, logs: list, days: int | None):
                  "top_equips_lost": "No Lost Equipment"
                  }
     if days is None:
-        start_date = date.fromisoformat(logs[0][2])
+        if logs:
+            start_date = date.fromisoformat(logs[0][2])
+        else:
+            start_date = date.fromisoformat('2024-01-01')
         end_date = date.today()
         days = (end_date - start_date).days
         if days == 0:
@@ -458,7 +463,7 @@ def get_coach_stats(cur, period: str | None, days: int | None, metric: str):
             coach_metrics["avg_daily_loss"] = round((coach_metrics["total_equip_lost"]/days), 2)
             coach_metrics["avg_daily_cost"] = round((coach_metrics["total_cost"]/days), 2)
             coach_stats.append(coach_metrics)
-    if metric == "items_lost":
+    if metric == "items":
         coach_stats = sorted(coach_stats, key=lambda x: x["total_equip_lost"])
     elif metric == "cost":
         coach_stats = sorted(coach_stats, key=lambda x: x["total_cost"])
@@ -518,7 +523,7 @@ def get_team_stats(cur, period: str | None, days: int | None, metric: str):
             team_metrics["avg_daily_loss"] = round((team_metrics["total_equip_lost"]/days), 2)
             team_metrics["avg_daily_cost"] = round((team_metrics["total_cost"]/days), 2)
             team_stats.append(team_metrics)
-    if metric == "items_lost":
+    if metric == "items":
         team_stats = sorted(team_stats, key=lambda x: x["total_equip_lost"])
     elif metric == "cost":
         team_stats = sorted(team_stats, key=lambda x: x["total_cost"])
