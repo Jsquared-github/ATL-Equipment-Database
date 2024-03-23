@@ -1,17 +1,27 @@
 from datetime import date as dt_date
-from typing import Annotated
+from typing import Annotated, Optional
 from dotenv import load_dotenv
 from os import getenv
 
 from fastapi import FastAPI, Depends, status, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
-
+from fastapi.middleware.cors import CORSMiddleware
 
 from functions import auth, db, password, generate_test_data
 from datamodels import User, Token
 
 load_dotenv(".env")
 app = FastAPI()
+origins = ["https://127.0.0.1:8000", "http://localhost:5173"]
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 
 @app.post("/test")
@@ -34,15 +44,15 @@ def login(form: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
 
 
 @app.get("/dashboard")
-def get_dashboard(user: Annotated[User, Depends(auth.resolve_token)], coach: str | None,
-                  team: str | None, period: str | None):
+def get_dashboard(user: Annotated[User, Depends(auth.resolve_token)], coach: Optional[str] = None,
+                  team: Optional[str] = None, period: Optional[str] = None):
     resp = db.get_dashboard(getenv("DB_URL"), coach, team, period)
     return resp
 
 
 @app.get("/leaderboard")
-def get_leaderboard(user: Annotated[User, Depends(auth.resolve_token)], metric: str | None = None,
-                    period: str | None = None):
+def get_leaderboard(user: Annotated[User, Depends(auth.resolve_token)], metric: Optional[str] = None,
+                    period: Optional[str] = None):
     if metric is None:
         metric = "items_lost"
     resp = db.get_leaderboard(getenv("DB_URL"), metric, period)
