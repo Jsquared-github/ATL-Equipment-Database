@@ -77,25 +77,3 @@
 		console.log(data);
 	};
 </script>
-
-<div class="login-container">
-	<form on:submit={checkinEquipment}>
-		<div class="input-group">
-			<label for="coach">coach:</label>
-			<input id="coach" name="coach" type="text" value="" placeholder="Enter your coach" />
-		</div>
-		<div class="input-group">
-			<label for="team">team:</label>
-			<input id="team" name="team" type="text" value="" placeholder="Enter your team" />
-		</div>
-		<div class="input-group">
-			<label for="equip">equipment:</label>
-			<input id="equip" name="equip" type="text" value="" placeholder="Enter your equipment" />
-		</div>
-		<div class="input-group">
-			<label for="quantity">quantity:</label>
-			<input id="quantity" name="quantity" type="text" value="" placeholder="Enter your quantity" />
-		</div>
-		<button type="submit">submit</button>
-	</form>
-</div>
