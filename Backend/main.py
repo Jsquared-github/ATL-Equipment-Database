@@ -186,14 +186,16 @@ def delete_team(user: Annotated[User, Depends(auth.resolve_token)], team: str):
 
 @app.post("/org/equipment")
 def create_equip(user: Annotated[User, Depends(auth.resolve_token)], equip: str,
-                 unit_price: float, quantity: int):
+                 unitPrice: float, quantity: int):
     if user.category != "admin":
         return HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have permission to access this resource",
             headers={"Content-Type": "application/json"}
         )
-    resp = db.insert_equipment(getenv("DB_URL"), equip, unit_price, quantity)
+    equip = equip.replace("+", " ", -1)
+    print(equip, unitPrice, quantity)
+    resp = db.insert_equipment(getenv("DB_URL"), equip, unitPrice, quantity)
     return resp
 
 

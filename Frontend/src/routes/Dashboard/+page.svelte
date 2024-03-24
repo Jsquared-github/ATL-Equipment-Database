@@ -38,21 +38,3 @@
 		console.log(data);
 	};
 </script>
-
-<div class="login-container">
-	<form on:submit={updateDashboard}>
-		<div class="input-group">
-			<label for="coach">coach:</label>
-			<input id="coach" name="coach" value="" type="text" placeholder="Enter your coach" />
-		</div>
-		<div class="input-group">
-			<label for="team">team:</label>
-			<input id="team" name="team" type="text" value="" placeholder="Enter your team" />
-		</div>
-		<div class="input-group">
-			<label for="period">period:</label>
-			<input id="period" name="period" value="" type="text" placeholder="Enter your period" />
-		</div>
-		<button type="submit">submit</button>
-	</form>
-</div>

@@ -37,17 +37,3 @@
 		console.log(data);
 	};
 </script>
-
-<div class="login-container">
-	<form on:submit={updateLeaderboard}>
-		<div class="input-group">
-			<label for="metric">metric:</label>
-			<input id="metric" name="metric" value="" type="text" placeholder="Enter your metric" />
-		</div>
-		<div class="input-group">
-			<label for="period">period:</label>
-			<input id="period" name="period" value="" type="text" placeholder="Enter your period" />
-		</div>
-		<button type="submit">submit</button>
-	</form>
-</div>
