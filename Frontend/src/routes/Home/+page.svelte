@@ -6,17 +6,43 @@
 </script>
 
 <script lang="ts">
-	import welcome from '$lib/images/svelte-welcome.webp';
-	import welcome_fallback from '$lib/images/svelte-welcome.png';
-	import { onMount } from 'svelte';
-	onMount(async () => {
-		const resp = await fetch('http://127.0.0.1:8000/org', {
-			method: 'GET',
-			headers: { Authorization: `Bearer ${localStorage.token}` }
-		});
-		const data = await resp.json();
-		console.log(data);
-	});
+    import welcome from '$lib/images/svelte-welcome.webp';
+    import welcome_fallback from '$lib/images/svelte-welcome.png';
+    import { onMount } from 'svelte';
+    import { writable } from 'svelte/store';
+    import { orgData } from './store';
+
+    // Initialize with empty arrays
+    onMount(async () => {
+        try {
+            const response = await fetch('http://127.0.0.1:8000/org', {
+                method: 'GET',
+                headers: { Authorization: `Bearer ${localStorage.token}` }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log(data);
+
+                orgData.set({
+                    teams: data.teams || [],
+                    coaches: data.coaches || [],
+                    players: data.players || [],
+                    equipment: data.equipment || []
+                });
+            } else {
+                throw new Error('Network response was not ok.');
+            }
+        } catch (error) {
+            console.error('There has been a problem with your fetch operation:', error);
+        }
+    });
+
+    orgData.subscribe(value => {
+        if (value.coaches.length > 0) {
+            console.log(value.coaches[0]); // Log the first coach object
+        }
+    });
 
 	const createUser = async (e: HTMLFormElement) => {
 		const form = new FormData(e.target);
@@ -345,54 +371,72 @@
 </script>
 
 <svelte:head>
-	<title>Home</title>
-	<meta name="description" content="Svelte demo app" />
+    <title>Home</title>
+    <meta name="description" content="Svelte demo app" />
 </svelte:head>
 
-<section>
-	<h1>
-		<span class="welcome">
-			Welcome Username to your <br />Equipment Library App
-			<!-- Welcome {getUsername()} to your <br />Equipment Library App -->
-		</span>
-	</h1>
-
-	<div class="checked-out-items">
-		<h2>Checked Out Items</h2>
-		<!-- Placeholder for checked out items -->
-		<!-- <Item /> -->
-		<!-- <Item /> -->
-	</div>
-
-	<div class="carousel-container">
-		<h2>In Stock Items</h2>
-		<!-- Placeholder for carousel -->
-		<!-- <Carousel /> -->
-	</div>
-
-	<div class="checkout-button-container">
-		<button>Check out additional items</button>
-	</div>
-</section>
+<div class="home-layout">
+    <h1>
+        <span class="welcome">
+            Welcome Username to your <br />Equipment Library App
+        </span>
+    </h1>
+  
+    <div class="category-card">
+        <div class="card-header">Coaches</div>
+        <div class="card-content">
+            {#each Object.values($orgData.coaches || {}) as coach}
+                <div class="item">{coach.coachID} - {coach.tID}</div>
+            {/each}
+        </div>
+    </div>
+  
+    <div class="category-card">
+        <div class="card-header">Teams</div>
+        <div class="card-content">
+            {#each Object.values($orgData.teams || {}) as team}
+                <div class="item">{team.teamID} - {team.teamName}</div>
+            {/each}
+        </div>
+    </div>
+  
+    <div class="category-card">
+        <div class="card-header">Equipment</div>
+        <div class="card-content">
+            {#each Object.values($orgData.equipment || {}) as equipment}
+                <div class="item">{equipment.equipmentID} - {equipment.equipName} ({equipment.currQuantity})</div>
+            {/each}
+        </div>
+    </div>
+</div>
 
 <style>
-	/* Your existing styles */
+    .home-layout {
+        /* Adjust layout styles as needed */
+    }
 
-	/* Additional styles or modifications */
-	.checked-out-items,
-	.carousel-container {
-		margin: 20px;
-	}
+    .category-card {
+        margin: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
 
-	.checkout-button-container {
-		display: flex;
-		justify-content: center;
-		margin-top: 20px;
-	}
+    .card-header {
+        padding: 0.5rem;
+        background-color: #f0f0f0;
+        border-bottom: 1px solid #ddd;
+        text-align: center;
+    }
 
-	button {
-		padding: 10px 20px;
-		font-size: 18px;
-		cursor: pointer;
-	}
+    .card-content {
+        height: 150px; /* Adjust height as needed */
+        overflow-y: auto;
+        padding: 0.5rem;
+    }
+
+    .item {
+        padding: 0.25rem;
+        border-bottom: 1px solid #eee;
+    }
 </style>
