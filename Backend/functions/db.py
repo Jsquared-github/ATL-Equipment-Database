@@ -79,7 +79,7 @@ def get_current_coaches(db: str, cur=None):
                             JOIN user_info ui ON ci.coachID = ui.userID\
                             JOIN team_info ti ON ci.tID = ti.teamID").fetchall()
     for coach in all_coaches:
-        coaches[coach[0]] = {"teams": set()}
+        coaches[coach[0]] = {"coachName": coach[0], "teams": set()}
     for coach in coach_teams:
         coaches[coach[0]]["teams"].add(coach[1])
     return coaches
@@ -107,7 +107,7 @@ def get_current_equipment(db: str, cur=None):
     equip_info = cur.execute("SELECT equipName,unitPrice,initQuantity,currQuantity\
                                 FROM equipment_info")
     for equip in equip_info:
-        equipment[equip[0]] = {"unitPrice": equip[1], "initQuantity": equip[2],
+        equipment[equip[0]] = {"equipName": equip[0], "unitPrice": equip[1], "initQuantity": equip[2],
                                "currQuantity": equip[3]}
     return equipment
 
@@ -137,7 +137,7 @@ def get_current_teams(db: str, cur=None):
                                 JOIN team_info ti ON ti.teamID = pi.tID\
                                 GROUP BY teamName").fetchall()
     for team in team_info:
-        teams[team[0]] = {"players": 0, "coaches": 0}
+        teams[team[0]] = {"teamName": team[0], "players": 0, "coaches": 0}
     for player in player_counts:
         teams[player[0]]["players"] = player[1]
     for coach in coach_counts:
