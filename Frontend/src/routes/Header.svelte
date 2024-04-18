@@ -16,8 +16,8 @@
 			<path d="M0,0 L1,2 C1.5,3 1.5,3 2,3 L2,0 Z" />
 		</svg>
 		<ul>
-			<li aria-current={$page.url.pathname === '/' ? 'page' : undefined}>
-				<a href="/">Home</a>
+			<li aria-current={$page.url.pathname === '/home' ? 'page' : undefined}>
+				<a href="/home">Home</a>
 			</li>
 			<li aria-current={$page.url.pathname === '/Dashboard' ? 'page' : undefined}>
 				<a href="/Dashboard">Dashboard</a>
@@ -25,7 +25,7 @@
 			<li aria-current={$page.url.pathname === '/Library' ? 'page' : undefined}>
 				<a href="/library">Library</a>
 			</li>
-			<li aria-current={$page.url.pathname === '/leaderboard' ? 'page' : undefined}>
+			<li aria-current={$page.url.pathname === '/Leaderboard' ? 'page' : undefined}>
 				<a href="/leaderboard">Leaderboard</a>
 			</li>
 		</ul>

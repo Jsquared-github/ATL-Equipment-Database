@@ -408,6 +408,21 @@
 			{/each}
 		</div>
 	</div>
+	<!-- Action Panel Added Below -->
+    <div class="action-panel">
+		<button on:click="{createUser}">Create User</button>
+		<button on:click="{deleteCoach}">Delete Coach</button>
+		<button on:click="{deletePlayer}">Delete Player</button>
+		<button on:click="{assignCoach}">Assign Coach</button>
+		<button on:click="{assignPlayer}">Assign Player</button>
+		<button on:click="{unassignCoach}">Unassign Coach</button>
+		<button on:click="{unassignPlayer}">Unassign Player</button>
+		<button on:click="{createTeam}">Create Team</button>
+		<button on:click="{deleteTeam}">Delete Team</button>
+		<button on:click="{createEquipment}">Create Equipment</button>
+		<button on:click="{deleteEquipment}">Delete Equipment</button>
+
+	</div>
 </div>
 
 <style>
@@ -435,8 +450,31 @@
 		padding: 0.5rem;
 	}
 
-	.item {
-		padding: 0.25rem;
-		border-bottom: 1px solid #eee;
-	}
+    .item {
+        padding: 0.25rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .action-panel {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 1rem;
+        margin-top: 1rem; /* Additional space above the panel */
+    }
+
+    .action-panel button {
+        margin: 5px;
+        padding: 0.6rem 1rem;
+        border: none;
+        background-color: #007BFF;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .action-panel button:hover {
+        background-color: #0056b3;
+    }
 </style>
+
