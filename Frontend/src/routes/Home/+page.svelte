@@ -1,8 +1,5 @@
 <script context="module">
-	/*export function getUsername(): string {
-        // Placeholder function to return the username
-        return 'Username';
-    }*/
+	
 </script>
 
 <script lang="ts">
@@ -11,6 +8,11 @@
 	import { onMount } from 'svelte';
 	import { writable } from 'svelte/store';
 	import { orgData } from './store';
+	import CreateUser from './createUser.svelte';
+	import GenericModal from './GenericModal.svelte';
+    let showModal = writable(false);
+    let modalContent = writable('');
+    let currentAction = writable('');;
 
 	// Initialize with empty arrays
 	onMount(async () => {
@@ -38,43 +40,67 @@
 		}
 	});
 
+	
+
+    async function submitUser(userData) {
+		console.log(userData);
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/org?category=${userData.category}&pwd=${userData.password}&username=${userData.username}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.token}`
+                },
+                
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Failed to create user');
+            console.log('User created successfully:', data);
+        } catch (error) {
+            console.error('Error creating user:', error);
+        }
+		showModal.set(false);
+    }
+
+
 	orgData.subscribe((value) => {
 		if (value.coaches.length > 0) {
 			console.log(value.coaches[0]); // Log the first coach object
 		}
 	});
 
-	const createUser = async (e: HTMLFormElement) => {
-		const form = new FormData(e.target);
-		const formData = {};
-		for (let field of form) {
-			const [key, value] = field;
-			formData[key] = value;
-		}
-		let params = [
-			['username', formData['username']],
-			['pwd', formData['password']],
-			['category', formData['category']]
-		];
-		let endpoint = 'http://127.0.0.1:8000/org?';
-		for (let param of params) {
-			if (param[1] == '') {
-				console.log('Fill in all fields');
-				return;
-			}
-			if (endpoint.slice(-1) !== '?') {
-				endpoint += `&${param[0]}=${param[1]}`;
-			} else {
-				endpoint += `${param[0]}=${param[1]}`;
-			}
-		}
-		const resp = await fetch(endpoint, {
-			method: 'POST',
-			headers: { Authorization: `Bearer ${localStorage.token}` }
-		});
-		const data = await resp.json();
-		console.log(data);
-	};
+	// const createUser = async (e: HTMLFormElement) => {
+	// 	const form = new FormData(e.target);
+	// 	const formData = {};
+	// 	for (let field of form) {
+	// 		const [key, value] = field;
+	// 		formData[key] = value;
+	// 	}
+	// 	let params = [
+	// 		['username', formData['username']],
+	// 		['pwd', formData['password']],
+	// 		['category', formData['category']]
+	// 	];
+	// 	let endpoint = 'http://127.0.0.1:8000/org?';
+	// 	for (let param of params) {
+	// 		if (param[1] == '') {
+	// 			console.log('Fill in all fields');
+	// 			return;
+	// 		}
+	// 		if (endpoint.slice(-1) !== '?') {
+	// 			endpoint += `&${param[0]}=${param[1]}`;
+	// 		} else {
+	// 			endpoint += `${param[0]}=${param[1]}`;
+	// 		}
+	// 	}
+	// 	const resp = await fetch(endpoint, {
+	// 		method: 'POST',
+	// 		headers: { Authorization: `Bearer ${localStorage.token}` }
+	// 	});
+	// 	const data = await resp.json();
+	// 	console.log(data);
+	// };
 
 	const deleteCoach = async (e: HTMLFormElement) => {
 		const form = new FormData(e.target);
@@ -363,11 +389,7 @@
 		const data = await resp.json();
 		console.log(data);
 	};
-	// import { getUsername } from './+page'; // You don't need to import getUsername here anymore
-	// import Item from './item.svelte';
-	// import Carousel from './carousel.svelte';
-
-	// Your component script here...
+	
 </script>
 
 <svelte:head>
@@ -381,6 +403,8 @@
 			Welcome Username to your <br />Equipment Library App
 		</span>
 	</h1>
+
+
 
 	<div class="category-card">
 		<div class="card-header">Coaches</div>
@@ -410,8 +434,9 @@
 	</div>
 	<!-- Action Panel Added Below -->
     <div class="action-panel">
-		<button on:click="{createUser}">Create User</button>
-		<button on:click="{deleteCoach}">Delete Coach</button>
+		<button on:click={() => showModal.set(true)}>Create User</button>
+		<CreateUser {submitUser} bind:show={$showModal} on:close={() => showModal.set(false)} />
+    	<button on:click={() => openModal('deleteCoach')}>Delete Coach</button>
 		<button on:click="{deletePlayer}">Delete Player</button>
 		<button on:click="{assignCoach}">Assign Coach</button>
 		<button on:click="{assignPlayer}">Assign Player</button>
