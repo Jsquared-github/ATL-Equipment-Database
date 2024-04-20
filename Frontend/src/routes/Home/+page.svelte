@@ -10,10 +10,11 @@
 	import { orgData } from './store';
 	import CreateUser from './createUser.svelte';
 	import GenericModal from './GenericModal.svelte';
+	import DeleteCoach from './deleteCoach.svelte';
     let showModal = writable(false);
     let modalContent = writable('');
     let currentAction = writable('');;
-
+	let showDeleteCoachModal = false;
 	// Initialize with empty arrays
 	onMount(async () => {
 		try {
@@ -436,7 +437,8 @@
     <div class="action-panel">
 		<button on:click={() => showModal.set(true)}>Create User</button>
 		<CreateUser {submitUser} bind:show={$showModal} on:close={() => showModal.set(false)} />
-    	<button on:click={() => openModal('deleteCoach')}>Delete Coach</button>
+		<button on:click={() => showDeleteCoachModal = true}>Delete Coach</button>
+		<DeleteCoach show={showDeleteCoachModal} coachData = {$orgData} on:close={() => showDeleteCoachModal = false} />
 		<button on:click="{deletePlayer}">Delete Player</button>
 		<button on:click="{assignCoach}">Assign Coach</button>
 		<button on:click="{assignPlayer}">Assign Player</button>
