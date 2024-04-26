@@ -11,10 +11,16 @@
 	import CreateUser from './createUser.svelte';
 	import GenericModal from './GenericModal.svelte';
 	import DeleteCoach from './deleteCoach.svelte';
+	import DeleteTeam from './deleteTeam.svelte';
+	import DeletePlayer from './deletePlayer.svelte';
+	import UnassignCoach from './unassignCoach.svelte';
     let showModal = writable(false);
     let modalContent = writable('');
-    let currentAction = writable('');;
+    let currentAction = writable('');
+	let showUnassignCoachModal = false;
 	let showDeleteCoachModal = false;
+	let showDeleteTeamModal = false;
+	let showDeletePlayerModal = false;
 	// Initialize with empty arrays
 	onMount(async () => {
 		try {
@@ -437,17 +443,30 @@
     <div class="action-panel">
 		<button on:click={() => showModal.set(true)}>Create User</button>
 		<CreateUser {submitUser} bind:show={$showModal} on:close={() => showModal.set(false)} />
+
 		<button on:click={() => showDeleteCoachModal = true}>Delete Coach</button>
 		<DeleteCoach show={showDeleteCoachModal} coachData = {$orgData} on:close={() => showDeleteCoachModal = false} />
-		<button on:click="{deletePlayer}">Delete Player</button>
-		<button on:click="{assignCoach}">Assign Coach</button>
-		<button on:click="{assignPlayer}">Assign Player</button>
-		<button on:click="{unassignCoach}">Unassign Coach</button>
-		<button on:click="{unassignPlayer}">Unassign Player</button>
-		<button on:click="{createTeam}">Create Team</button>
-		<button on:click="{deleteTeam}">Delete Team</button>
-		<button on:click="{createEquipment}">Create Equipment</button>
-		<button on:click="{deleteEquipment}">Delete Equipment</button>
+
+		<button on:click={() => showDeletePlayerModal = true}>Delete Player</button>
+		<DeletePlayer show={showDeletePlayerModal} playerData = {$orgData} on:close={() => showDeletePlayerModal = false} />
+
+		<!--<button on:click="{assignCoach}">Assign Coach</button>-->
+
+		<!--<button on:click="{assignPlayer}">Assign Player</button>-->
+
+		<button on:click={() => showUnassignCoachModal = true}>Unassign Coach</button>
+		<UnassignCoach show={showUnassignCoachModal} coachData = {$orgData} on:close={() => showUnassignCoachModal = false} />
+
+		<!--<button on:click="{unassignPlayer}">Unassign Player</button>-->
+
+		<!--<button on:click="{createTeam}">Create Team</button>-->
+
+		<button on:click={() => showDeleteTeamModal = true}>Delete Team</button>
+		<DeleteTeam show={showDeleteTeamModal} teamData = {$orgData} on:close={() => showDeleteTeamModal = false} />
+
+		<!--<button on:click="{createEquipment}">Create Equipment</button>-->
+
+		<!--<button on:click="{deleteEquipment}">Delete Equipment</button>-->
 
 	</div>
 </div>

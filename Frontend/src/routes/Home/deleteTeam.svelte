@@ -1,15 +1,13 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
     //import { orgData } from './store';
-    export let coachData;
+    export let teamData;
     export let show = false;
     const dispatch = createEventDispatcher();
-    let selectedCoachId = '';
-    console.log(coachData);
+    let selectedTeamId = '';
     import { onMount } from 'svelte';
     import { orgData } from './store';
-    let coaches = [];
-    console.log(orgData);
+    let teams = [];
 
     onMount(async () => {
 		try {
@@ -21,18 +19,20 @@
 			if (response.ok) {
 				const data = await response.json();
 				console.log(data);
+
                 
-                for (const [key, value] of Object.entries(data.coaches)) {
-                    coaches.push({
+                
+                for (const [key, value] of Object.entries(data.teams)) {
+                    teams.push({
                         ...value,
-                        coachID: key
+                        teamID: key
                     });
                 }
-                console.log(coaches);
+                console.log(teams);
 
 				orgData.set({
-					teams: data.teams || [],
-					coaches: coaches || [],
+					teams: teams || [],
+					coaches: data.coaches || [],
 					players: data.players || [],
 					equipment: data.equipment || []
 				});
@@ -46,19 +46,19 @@
     console.log($orgData);
 
 
-    // $: if (show && $orgData.coaches && $orgData.coaches.length > 0) {
+    // $: if ($orgData.coaches && $orgData.coaches.length > 0) {
     //     console.log('Coaches available:', $orgData.coaches);
     // } else if (show) {
     //     console.log('No coaches available');
     // }
-
-    async function deleteCoach() {
-        if (!selectedCoachId) {
+ 
+    async function deleteTeam() {
+        if (!selectedTeamId) {
             alert('Please select a coach to delete.');
             return;
         }
         try {
-            const response = await fetch(`http://127.0.0.1:8000/org/coaches/${selectedCoachId}?team=team1`, {
+            const response = await fetch(`http://127.0.0.1:8000/org/teams?team=${selectedTeamId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${localStorage.token}`,
@@ -80,33 +80,33 @@
             close();
         } catch (error) {
             console.error('Error:', error);
-            alert(`Error deleting coach: ${error.message}`);
+            alert(`Error deleting team: ${error.message}`);
         }
     }
 
     function close() {
         dispatch('close');
-        selectedCoachId = '';
+        selectedTeamId = '';
     }
 </script>
 {#if show}
 <div class="modal">
     <div class="modal-content">
         <span class="close" on:click={close}>&times;</span>
-        <h2>Unassign Coach</h2>
-        {#if coaches && coaches.length > 0}
-            <select bind:value={selectedCoachId}>
-                <option value="" disabled selected>Select a coach to delete</option>
-                {#each coaches as coach}
-                    <option value={coach.coachID}>{coach.coachName}</option>
+        <h2>Delete Team</h2>
+        {#if teams && teams.length > 0}
+            <select bind:value={selectedTeamId}>
+                <option value="" disabled selected>Select a team to delete</option>
+                {#each teams as team}
+                    <option value={team.teamID}>{team.teamName}</option>
                 {/each}
             </select>
-            <button on:click={deleteCoach}>Delete Coach</button>
+            <button on:click={deleteTeam}>Delete Team</button>
         {:else}
-            <p>No coaches available to delete.</p>
+            <p>No teams available to delete 1.</p>
         {/if}
     </div>
-</div> 
+</div>
 {/if}
 <style>
     .modal {

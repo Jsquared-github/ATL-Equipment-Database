@@ -20,7 +20,6 @@
 				const data = await response.json();
 				console.log(data);
 
-                let teams = [];
                 
                 
                 for (const [key, value] of Object.entries(data.coaches)) {

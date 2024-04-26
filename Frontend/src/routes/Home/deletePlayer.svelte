@@ -1,15 +1,13 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
     //import { orgData } from './store';
-    export let coachData;
+    export let playerData;
     export let show = false;
     const dispatch = createEventDispatcher();
-    let selectedCoachId = '';
-    console.log(coachData);
+    let selectedPlayerId = '';
     import { onMount } from 'svelte';
     import { orgData } from './store';
-    let coaches = [];
-    console.log(orgData);
+    let players = [];
 
     onMount(async () => {
 		try {
@@ -21,19 +19,21 @@
 			if (response.ok) {
 				const data = await response.json();
 				console.log(data);
+
                 
-                for (const [key, value] of Object.entries(data.coaches)) {
-                    coaches.push({
+                
+                for (const [key, value] of Object.entries(data.players)) {
+                    players.push({
                         ...value,
-                        coachID: key
+                        playerID: key
                     });
                 }
-                console.log(coaches);
+                console.log(players);
 
 				orgData.set({
 					teams: data.teams || [],
-					coaches: coaches || [],
-					players: data.players || [],
+					coaches: data.coaches || [],
+					players: players || [],
 					equipment: data.equipment || []
 				});
 			} else {
@@ -46,19 +46,19 @@
     console.log($orgData);
 
 
-    // $: if (show && $orgData.coaches && $orgData.coaches.length > 0) {
+    // $: if ($orgData.coaches && $orgData.coaches.length > 0) {
     //     console.log('Coaches available:', $orgData.coaches);
     // } else if (show) {
     //     console.log('No coaches available');
     // }
-
-    async function deleteCoach() {
-        if (!selectedCoachId) {
+ 
+    async function deletePlayer() {
+        if (!selectedPlayerId) {
             alert('Please select a coach to delete.');
             return;
         }
         try {
-            const response = await fetch(`http://127.0.0.1:8000/org/coaches/${selectedCoachId}?team=team1`, {
+            const response = await fetch(`http://127.0.0.1:8000/org/players?player=${selectedPlayerId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${localStorage.token}`,
@@ -69,7 +69,7 @@
             console.log('Server response:', result);
 
             if (!response.ok) {
-                throw new Error(result || 'Failed to delete coach');
+                throw new Error(result || 'Failed to delete player');
             }
 
             // orgData.update(data => {
@@ -80,33 +80,33 @@
             close();
         } catch (error) {
             console.error('Error:', error);
-            alert(`Error deleting coach: ${error.message}`);
+            alert(`Error deleting team: ${error.message}`);
         }
     }
 
     function close() {
         dispatch('close');
-        selectedCoachId = '';
+        selectedPlayerId = '';
     }
 </script>
 {#if show}
 <div class="modal">
     <div class="modal-content">
         <span class="close" on:click={close}>&times;</span>
-        <h2>Unassign Coach</h2>
-        {#if coaches && coaches.length > 0}
-            <select bind:value={selectedCoachId}>
-                <option value="" disabled selected>Select a coach to delete</option>
-                {#each coaches as coach}
-                    <option value={coach.coachID}>{coach.coachName}</option>
+        <h2>Delete Player</h2>
+        {#if players && players.length > 0}
+            <select bind:value={selectedPlayerId}>
+                <option value="" disabled selected>Select a player to delete</option>
+                {#each players as player}
+                    <option value={player.playerID}>{player.playerID}</option>
                 {/each}
             </select>
-            <button on:click={deleteCoach}>Delete Coach</button>
+            <button on:click={deletePlayer}>Delete Player</button>
         {:else}
-            <p>No coaches available to delete.</p>
+            <p>No players available to delete .</p>
         {/if}
     </div>
-</div> 
+</div>
 {/if}
 <style>
     .modal {
